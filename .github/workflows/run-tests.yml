@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Manuel tetikleme açık, senin istediğin gibi kök hizada!
+  workflow_dispatch: # Manuel tetikleme kök hizada, canavar gibi çalışır.
 
 jobs:
   run-tests:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Uzak makineye Java 25 kurulumu yap (Senin loglarla tam uyumlu)
+      # 2. Uzak makineye Java 25 kurulumu yap
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
@@ -28,14 +28,17 @@ jobs:
       - name: Install Google Chrome, Firefox and Edge
         run: |
           sudo apt-get update
+          
           # Chrome Kurulumu
           sudo apt-get install -y google-chrome-stable
-          # Firefox Kurulumu
-          sudo apt-get install -y firefox
-          # Edge Kurulumu (Microsoft reposunu ekleyerek garantiye alıyoruz)
+          
+          # Firefox Güncellemesi (Ubuntu'da yüklü gelen Snap yapısını korur)
+          sudo apt-get install --only-upgrade -y firefox || true
+          
+          # Edge Kurulumu (O sinsi .by hatası tamamen .d olarak düzeltildi!)
           curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
           sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
-          sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.by/microsoft-edge.list'
+          sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list'
           rm microsoft.gpg
           sudo apt-get update && sudo apt-get install -y microsoft-edge-stable
 
@@ -46,15 +49,14 @@ jobs:
           Xvfb :99 -screen 0 1920x1080x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
-      # 5. Testleri koştur (Örn: pom.xml veya testng.xml ayarına göre varsayılanı koşar)
-      # Not: Eğer tarayıcıyı dışarıdan parametre geçmek istersen -Dbrowser=firefox şeklinde ezebilirsin.
+      # 5. Testleri koştur
       - name: Run Automation Tests
         run: mvn clean test
 
       # 6. Allure sonuçlarını koru ve harika raporu üret
       - name: Load Allure History & Generate Report
         uses: simple-elf/allure-report-action@master
-        if: always() # Testler patlasa bile raporu üretmek için zorunlu
+        if: always() # Testler fail olsa bile raporun üretilmesi için şart!
         with:
           allure_results: target/allure-results
           allure_report: allure-report
@@ -63,7 +65,7 @@ jobs:
       # 7. Üretilen Allure raporunu Artifact olarak GitHub paneline yükle
       - name: Upload Allure Report Artifact
         uses: actions/upload-artifact@v4
-        if: always() # Rapor her durumda indirilebilir olsun
+        if: always()
         with:
           name: allure-report
           path: allure-report
