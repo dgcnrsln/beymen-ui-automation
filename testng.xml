@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Beymen Web UI Test Suite" parallel="methods" thread-count="2">
+
+    <listeners>
+        <listener class-name="com.beymen.automation.utils.TestListener"/>
+    </listeners>
+
+    <test name="Anasayfa ve Sepet Testleri">
+        <classes>
+            <class name="com.beymen.automation.tests.HomePageTests"/>
+            <class name="com.beymen.automation.tests.CartTests"/>
+        </classes>
+    </test>
+
+</suite>
